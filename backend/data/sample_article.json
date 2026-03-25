@@ -1,0 +1,13 @@
+{
+  "id": "test-1",
+  "url": "https://example.com/news/test",
+  "source": "Example News",
+  "title": "Test Article",
+  "author": "John Doe",
+  "publishedAt": "2026-03-20T10:00:00Z",
+  "language": "en",
+  "topic": "technology",
+  "summary": "This is a test article.",
+  "content": "This is the full content of the test article.",
+  "tags": ["test", "technology"]
+}
