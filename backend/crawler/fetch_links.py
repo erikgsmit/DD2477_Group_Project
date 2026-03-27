@@ -4,10 +4,27 @@ import xml.etree.ElementTree as ET #read and interprete XML (RSS in XML)
 from pathlib import Path
 from urllib.parse import urlparse
 
-
+# get more from here if needed https://www.nytimes.com/rss
 RSS_FEEDS = [
-    "https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/section/world/rss.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Europe.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Education.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/EnergyEnvironment.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/SmallBusiness.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/DealBook.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/MediaandAdvertising.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/YourMoney.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/PersonalTech.xml",
     "https://feeds.bbci.co.uk/news/rss.xml",
+    
 ]
 
 # For implementing web crawler without RSS
