@@ -94,8 +94,6 @@ def extract_article_data(link_item: dict) -> dict | None:
         "content": content,
         "content_length": len(content),
         "source_domain": domain,
-        "source_feed": link_item.get("source_feed", ""),
-        "rss_title": link_item.get("title", ""),
         "published": link_item.get("published", "")
     }
 
