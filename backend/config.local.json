@@ -1,6 +1,6 @@
 {
   "url": "http://localhost:9200",
   "username": "elastic",
-  "password": "your_password_here",
+  "password": "HT1pbo2r",
   "index_name": "news_articles"
 }

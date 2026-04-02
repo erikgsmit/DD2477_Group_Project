@@ -3,6 +3,20 @@
 This folder includes a small Python scaffold for ranked retrieval with
 Rocchio relevance feedback.
 
+## API
+
+Run the backend API with:
+
+```bash
+uvicorn app:app --reload
+```
+
+The search endpoint is:
+
+```text
+GET /api/search?query=technology&size=10
+```
+
 ## Modules
 
 - `search/text_processing.py`
