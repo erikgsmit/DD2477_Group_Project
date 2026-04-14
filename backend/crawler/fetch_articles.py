@@ -4,8 +4,9 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 from urllib.parse import urlparse
 
-INPUT_PATH = Path("data/raw/links.json")
-OUTPUT_PATH = Path("data/raw/articles_raw.json")
+BASE_DIR = Path(__file__).resolve().parent
+INPUT_PATH = BASE_DIR / "data" / "raw" / "links.json"
+OUTPUT_PATH = BASE_DIR / "data" / "raw" / "articles_raw.json"
 
 
 HEADERS = {

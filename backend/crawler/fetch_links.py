@@ -36,7 +36,8 @@ START_URLS = [
 MAX_PAGES_PER_DOMAIN = 30
 DELAY_S = 1.0
 
-OUTPUT_PATH = Path("data/raw/links.json")
+BASE_DIR = Path(__file__).resolve().parent
+OUTPUT_PATH = BASE_DIR / "data" / "raw" / "links.json"
 
 def ensure_output_directory(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
