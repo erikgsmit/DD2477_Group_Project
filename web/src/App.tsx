@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { fetchRecommendations, submitFeedback } from "./api";
 import type { Article, Feedback } from "./types";
 
-const initialQuery = "Lorem";
+const initialQuery = "";
 
 function App() {
   // Initialize state variables for query, articles, feedback, and loading status
@@ -10,6 +10,7 @@ function App() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [feedbackById, setFeedbackById] = useState<Record<string, Feedback>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     void loadArticles(initialQuery);
@@ -18,9 +19,16 @@ function App() {
   /* Function to load articles based on the provided query and update the state accordingly */
   async function loadArticles(nextQuery: string) {
     setIsLoading(true);
+    setErrorMessage(null);
+
     try {
       const response = await fetchRecommendations(nextQuery);
       setArticles(response.articles);
+    } catch (error) {
+      setArticles([]);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to load articles right now."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +90,14 @@ function App() {
       </section>
 
       <section className="results">
-        {articles.length === 0 ? (
+        {errorMessage ? (
+          <div className="empty-state">
+            <h2>Search unavailable</h2>
+            <p>{errorMessage}</p>
+          </div>
+        ) : null}
+
+        {!errorMessage && articles.length === 0 ? (
           <div className="empty-state">
             <h2>No matching articles</h2>
             <p>Try another keyword or broaden the query.</p>

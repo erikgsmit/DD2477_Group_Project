@@ -3,6 +3,38 @@
 This folder includes a small Python scaffold for ranked retrieval with
 Rocchio relevance feedback.
 
+## Local Elasticsearch setup
+
+After setting up a local Elasticsearch instance with Docker
+([Elastic start-local guide](https://github.com/elastic/start-local?tab=readme-ov-file#-try-elasticsearch-and-kibana-locally)),
+install dependencies with `pip install -r requirements.txt` (or install
+`elasticsearch` directly).
+
+Update local credentials in `config.local.json` (do not commit those local
+changes), then run:
+
+```bash
+python create_index.py
+python insert_data.py
+```
+
+This creates your index and inserts articles from
+`crawler/data/raw/articles_raw.json`.
+
+## API
+
+Run the backend API with:
+
+```bash
+uvicorn app:app --reload
+```
+
+The search endpoint is:
+
+```text
+GET /api/search?query=technology&size=10
+```
+
 ## Modules
 
 - `search/text_processing.py`
@@ -51,10 +83,3 @@ Feedback is to be stored separately (seperate index) from the article documents 
 
 The idea is that feedback from similar past queries can be reused during reranking
 and more similar past queries contribute more strongly to the Rocchio update
-
-## For local elasticsearch
-
-After setting up your own localelastic search on your docker (https://github.com/elastic/start-local?tab=readme-ov-file#-try-elasticsearch-and-kibana-locally) do a pip install 
-elasticsearch (or run pip install -r requirements.txt). Then alter the information like username and password which apply to you on config.local.json (DO NOT PUSH THOSE CONFIG CHANGES) then run
-"python create_index.py" which creates the index on your local elastic search. Then run "python insert_data.py" which should insert the articles from articles_raw.json into your
-index. 

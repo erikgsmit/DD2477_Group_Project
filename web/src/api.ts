@@ -1,34 +1,35 @@
-/* 
-API module to handle fetching article recommendations and submitting feedback 
-This is where we would implement actual API calls to a backend service. For example:
-
-/GET/recommendations?query=food to fetch articles related to "food"
-
-*/
-
-import { mockArticles } from "./mockData";
 import type { Article, Feedback } from "./types";
+
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export interface SearchResponse {
   articles: Article[];
 }
 
-/*** 
- * Fetch article recommendations based on a search query (currently using mock data)
+/***
+ * Fetch article recommendations based on a search query from the backend API.
  * @param query - The search query
  * @returns A promise resolving to the search results
- */ 
+ */
 export async function fetchRecommendations(query: string): Promise<SearchResponse> {
-  const normalizedQuery = query.trim().toLowerCase();
+  const searchParams = new URLSearchParams();
+  const trimmedQuery = query.trim();
 
-  const filteredArticles = normalizedQuery
-    ? mockArticles.filter((article) => {
-        const haystack = `${article.title} ${article.summary} ${article.topic}`.toLowerCase();
-        return haystack.includes(normalizedQuery);
-      })
-    : mockArticles;
+  if (trimmedQuery) {
+    searchParams.set("query", trimmedQuery);
+  }
 
-  return Promise.resolve({ articles: filteredArticles });
+  const response = await fetch(`${API_BASE_URL}/api/search?${searchParams.toString()}`);
+
+  if (!response.ok) {
+    throw new Error(`Search request failed with status ${response.status}`);
+  }
+
+  const payload = (await response.json()) as SearchResponse;
+  return {
+    articles: Array.isArray(payload.articles) ? payload.articles : [],
+  };
 }
 
 /***

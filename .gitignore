@@ -1,12 +1,32 @@
+# Frontend dependencies and build output
 node_modules/
 dist/
 build/
 .vite/
 
+# Python environments and caches
+.venv/
+venv/
+backend/venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environment and secrets
 .env
 .env.*
 !.env.example
+backend/config.local.json
 
+# Generated data and scratch files
+temp/
+crawler/output/
+backend/crawler/data/raw/
+
+# OS and editor noise
 .DS_Store
 *.log
 __pycache__/
