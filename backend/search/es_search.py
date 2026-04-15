@@ -19,6 +19,14 @@ SEARCH_FIELDS = [
 	"tags^2",
 	"source",
 ]
+WILDCARD_FIELDS: list[tuple[str, float]] = [
+    ("title", 4.0),
+    ("summary", 2.0),
+    ("content", 1.0),
+    ("topic", 2.0),
+    ("tags", 2.0),
+    ("source", 1.0),
+]
 RETURN_FIELDS = [
 	"id",
 	"url",
@@ -47,6 +55,25 @@ def create_client(config_path: Path = CONFIG_PATH) -> tuple[Elasticsearch, str]:
     )
     return client, str(config["index_name"])
 
+def _build_wildcard_query(query: str) -> dict[str, Any]:
+    return {
+        "bool": {
+            "should": [
+                {
+                    "wildcard": {
+                        field: {
+                            "value": query.lower(),
+                            "case_insensitive": True,
+                            "boost": boost,
+                            "rewrite": "constant_score_blended",
+                        }
+                    }
+                }
+                for field, boost in WILDCARD_FIELDS
+            ],
+            "minimum_should_match": 1,
+        }
+    }
 
 def build_search_body(query: str, size: int) -> dict[str, Any]:
     normalized_query = query.strip()
@@ -60,6 +87,13 @@ def build_search_body(query: str, size: int) -> dict[str, Any]:
                 "_score",
             ],
             "query": {"match_all": {}},
+        }
+    
+    if "*" in normalized_query in normalized_query:
+        return {
+            "size": size,
+            "_source": RETURN_FIELDS,
+            "query": _build_wildcard_query(normalized_query),
         }
 
     return {
