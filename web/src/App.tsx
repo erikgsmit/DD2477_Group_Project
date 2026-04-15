@@ -40,9 +40,18 @@ function App() {
   }
 
   /* Apply relevance feedback (like/dislike) to an article and submit it to the backend */
-  async function handleFeedback(articleId: string, feedback: Exclude<Feedback, null>) {
+  async function handleFeedback(article: Article, feedback: Exclude<Feedback, null>) {
+    const articleId = article.id;
     setFeedbackById((current) => ({ ...current, [articleId]: feedback }));
-    await submitFeedback(articleId, feedback);
+
+    try {
+      const response = await submitFeedback(article, feedback, query, articles.length || 10);
+      setArticles(response.articles);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unable to submit feedback right now."
+      );
+    }
   }
 
   /* Calculate the total number of likes and dislikes based on the feedback state */
@@ -123,14 +132,14 @@ function App() {
                     <button
                       type="button"
                       className={feedback === "like" ? "active positive" : ""}
-                      onClick={() => void handleFeedback(article.id, "like")}
+                      onClick={() => void handleFeedback(article, "like")}
                     >
                       Like
                     </button>
                     <button
                       type="button"
                       className={feedback === "dislike" ? "active negative" : ""}
-                      onClick={() => void handleFeedback(article.id, "dislike")}
+                      onClick={() => void handleFeedback(article, "dislike")}
                     >
                       Dislike
                     </button>
