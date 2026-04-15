@@ -29,3 +29,5 @@ backend/crawler/data/raw/
 # OS and editor noise
 .DS_Store
 *.log
+__pycache__/
+*.py[cod]
