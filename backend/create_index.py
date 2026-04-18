@@ -1,8 +1,8 @@
 from elasticsearch import Elasticsearch
 import json
+from config import get_es_config
 
-with open("config.local.json", "r", encoding="utf-8") as f:
-    config = json.load(f)
+config = get_es_config()
 
 es = Elasticsearch(
     config["url"],

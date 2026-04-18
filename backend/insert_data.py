@@ -3,6 +3,7 @@ from __future__ import annotations
 from email.utils import parsedate_to_datetime
 import hashlib
 import json
+from config import get_es_config
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -11,12 +12,12 @@ from elasticsearch.helpers import bulk
 
 
 BASE_DIR = Path(__file__).resolve().parent
-CONFIG_PATH = BASE_DIR / "config.local.json"
+#CONFIG_PATH = BASE_DIR / "config.local.json"
 DEFAULT_INPUT_PATH = BASE_DIR / "crawler" / "data" / "raw" / "articles_raw.json"
 
-def load_config(config_path: Path) -> dict:
-    with config_path.open("r", encoding="utf-8") as file:
-        return json.load(file)
+#def load_config(config_path: Path) -> dict:
+    #with config_path.open("r", encoding="utf-8") as file:
+        #return json.load(file)
 
 
 def load_articles(input_path: Path) -> list[dict]:
@@ -107,7 +108,7 @@ def build_bulk_actions(index_name: str, articles: list[dict]) -> list[dict]:
 
 
 def main() -> None:
-    config = load_config(CONFIG_PATH)
+    config = get_es_config()
     input_path = DEFAULT_INPUT_PATH
 
     if not input_path.exists():

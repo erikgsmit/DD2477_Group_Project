@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 from typing import Any
-
+from config import get_es_config
 from elasticsearch import Elasticsearch
 
 
@@ -39,8 +39,8 @@ def load_config(config_path: Path = CONFIG_PATH) -> dict[str, Any]:
         return json.load(file)
 
 
-def create_client(config_path: Path = CONFIG_PATH) -> tuple[Elasticsearch, str]:
-    config = load_config(config_path)
+def create_client() -> tuple[Elasticsearch, str]:
+    config = get_es_config()
     client = Elasticsearch(
         config["url"],
         basic_auth=(config["username"], config["password"]),
