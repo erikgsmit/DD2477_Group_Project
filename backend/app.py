@@ -38,7 +38,7 @@ def _search_with_relevance_feedback(
         A tuple containing the list of articles, the expanded query, and the expansion terms.
     """
     
-    # Retrieve all feedback entries and their associated articles from the feedback store (eventually Elasticsearch).
+    # Retrieve all feedback entries and their associated articles from the feedback index.
     feedback_entries = feedback_store.list_feedback()
     feedback_articles = feedback_store.list_feedback_articles()
     
@@ -95,12 +95,12 @@ def post_feedback(
 ) -> dict[str, list[dict] | dict[str, str | int] | str | list[str]]:
     """
     Endpoint to receive user feedback on articles. 
-    Stores the feedback (eventually in Elasticsearch) and returns an updated search result based on the feedback.
+    Stores the feedback in Elasticsearch and returns an updated search result based on the feedback.
     """
     
     feedback_value = 1 if payload.feedback == "like" else -1
     
-    # Add feedback (replace with ES)
+    # Add feedback event and optional article snapshot to the feedback index.
     entry = feedback_store.add_feedback(
         article_id=payload.article_id,
         query=payload.query,

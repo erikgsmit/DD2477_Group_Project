@@ -39,6 +39,11 @@ def load_config(config_path: Path = CONFIG_PATH) -> dict[str, Any]:
         return json.load(file)
 
 
+def get_feedback_index_name(config_path: Path = CONFIG_PATH) -> str:
+    config = load_config(config_path)
+    return str(config.get("feedback_index_name", "news_feedback"))
+
+
 def create_client(config_path: Path = CONFIG_PATH) -> tuple[Elasticsearch, str]:
     config = load_config(config_path)
     client = Elasticsearch(

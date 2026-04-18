@@ -1,3 +1,4 @@
 elasticsearch
 fastapi
 uvicorn
+httpx
