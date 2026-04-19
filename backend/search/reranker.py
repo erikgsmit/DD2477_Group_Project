@@ -9,6 +9,33 @@ from search.vectorization import (
     compute_idf,
 )
 
+EXPANSION_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "for",
+    "from",
+    "has",
+    "in",
+    "is",
+    "it",
+    "of",
+    "on",
+    "or",
+    "that",
+    "the",
+    "this",
+    "to",
+    "was",
+    "were",
+    "with",
+}
+
 
 def _normalize_base_score(score: float, min_score: float, max_score: float) -> float:
     """
@@ -37,10 +64,95 @@ def _query_similarity(
     return cosine_similarity(left_vector, right_vector)
 
 
+def expand_query_with_rocchio(
+    query: str,
+    feedback_articles: list[dict],
+    feedback_entries: list[dict],
+    alpha: float = 1.0,
+    beta: float = 0.75,
+    gamma: float = 0.15,
+    max_expansion_terms: int = 6,
+    query_similarity_threshold: float = 0.2,
+) -> tuple[str, list[str]]:
+    """
+    Convert the Rocchio-updated query vector into extra search terms for the
+    retrieval step before reranking.
+    """
+    if not feedback_articles or not feedback_entries:
+        return query, []
+
+    document_tokens = [
+        preprocess_text(article_to_text(article)) for article in feedback_articles
+    ]
+    idf_map = compute_idf([preprocess_text(query), *document_tokens])
+    query_vector = build_query_vector(query, idf_map)
+    article_vectors = {
+        article["id"]: build_article_vector(article, idf_map)
+        for article in feedback_articles
+    }
+
+    feedback_queries = [
+        entry.get("query", "")
+        for entry in feedback_entries
+        if isinstance(entry.get("query"), str) and entry.get("query", "").strip()
+    ]
+    query_idf_map = compute_idf(
+        [preprocess_text(past_query) for past_query in [query, *feedback_queries]]
+    )
+
+    relevant_weighted_vectors: list[tuple[dict[str, float], float]] = []
+    non_relevant_weighted_vectors: list[tuple[dict[str, float], float]] = []
+
+    for entry in feedback_entries:
+        past_query = entry.get("query", "")
+        article_id = entry.get("article_id")
+        feedback_value = int(entry.get("feedback", 0))
+
+        if not isinstance(past_query, str) or article_id not in article_vectors:
+            continue
+
+        query_similarity = _query_similarity(query, past_query, query_idf_map)
+        if query.strip() and query_similarity < query_similarity_threshold:
+            continue
+
+        weight = query_similarity if query_similarity > 0 else 1.0
+        weighted_vector = (article_vectors[article_id], weight)
+        if feedback_value == 1:
+            relevant_weighted_vectors.append(weighted_vector)
+        elif feedback_value == -1:
+            non_relevant_weighted_vectors.append(weighted_vector)
+
+    updated_query_vector = weighted_rocchio_update(
+        query_vector=query_vector,
+        relevant_weighted_vectors=relevant_weighted_vectors,
+        non_relevant_weighted_vectors=non_relevant_weighted_vectors,
+        alpha=alpha,
+        beta=beta,
+        gamma=gamma,
+    )
+
+    original_terms = set(preprocess_text(query))
+    expansion_terms: list[str] = []
+    for term, _score in sorted(
+        updated_query_vector.items(), key=lambda item: item[1], reverse=True
+    ):
+        if term in original_terms or term in EXPANSION_STOPWORDS:
+            continue
+        if len(term) <= 2 or term.isdigit():
+            continue
+        expansion_terms.append(term)
+        if len(expansion_terms) == max_expansion_terms:
+            break
+
+    expanded_query = " ".join([query.strip(), *expansion_terms]).strip()
+    return expanded_query, expansion_terms
+
+
 def rerank_with_rocchio(
     query: str,
     candidates: list[dict],
     feedback_entries: list[dict],
+    feedback_articles: list[dict] | None = None,
     alpha: float = 0.5,
     beta: float = 0.5,
     gamma: float = 0.15,
@@ -68,9 +180,16 @@ def rerank_with_rocchio(
     if not candidates:
         return []
 
+    vector_articles_by_id = {
+        article["id"]: article
+        for article in [*candidates, *(feedback_articles or [])]
+        if article.get("id")
+    }
+
     # Get all tokens for IDF calculation
     document_tokens = [
-        preprocess_text(article_to_text(article)) for article in candidates
+        preprocess_text(article_to_text(article))
+        for article in vector_articles_by_id.values()
     ]
 
     # Calculate IDF values for all terms across all candidate articles and the query
@@ -79,7 +198,8 @@ def rerank_with_rocchio(
     # Build the query vector and article vectors using TF-IDF.
     query_vector = build_query_vector(query, idf_map)
     article_vectors = {
-        article["id"]: build_article_vector(article, idf_map) for article in candidates
+        article["id"]: build_article_vector(article, idf_map)
+        for article in vector_articles_by_id.values()
     }
 
     # Build a small query corpus so we can compare the current query to the

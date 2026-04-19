@@ -33,13 +33,34 @@ export async function fetchRecommendations(query: string): Promise<SearchRespons
 }
 
 /***
- * Submit user feedback (like/dislike) for a specific article (currently just logs the feedback)
- * @param articleId - The ID of the article for which feedback is being submitted
- * @param feedback - The feedback value ("like" or "dislike")
- * @returns A promise that resolves when the feedback has been "submitted"
- * Note: In a real implementation, this would involve an API call to the backend to record the feedback
+ * Submit user feedback and receive the reranked recommendation list.
  */
-export async function submitFeedback(articleId: string, feedback: Feedback): Promise<void> {
-  console.info("Feedback submitted", { articleId, feedback });
-  return Promise.resolve();
+export async function submitFeedback(
+  article: Article,
+  feedback: Exclude<Feedback, null>,
+  query: string,
+  size: number
+): Promise<SearchResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      article_id: article.id,
+      article,
+      feedback,
+      query,
+      size,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Feedback request failed with status ${response.status}`);
+  }
+
+  const payload = (await response.json()) as SearchResponse;
+  return {
+    articles: Array.isArray(payload.articles) ? payload.articles : [],
+  };
 }
