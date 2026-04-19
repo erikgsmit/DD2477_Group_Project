@@ -2,5 +2,6 @@
   "url": "http://localhost:9200",
   "username": "elastic",
   "password": "HT1pbo2r",
-  "index_name": "news_articles"
+  "index_name": "news_articles",
+  "feedback_index_name": "news_feedback"
 }
