@@ -1,0 +1,16 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "properties": {
+      "kind": { "type": "keyword" },
+      "article_id": { "type": "keyword" },
+      "query": { "type": "text" },
+      "feedback": { "type": "integer" },
+      "timestamp": { "type": "date" },
+      "article": { "type": "object", "dynamic": true }
+    }
+  }
+}

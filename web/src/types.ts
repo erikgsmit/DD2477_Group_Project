@@ -8,4 +8,7 @@ export interface Article {
   topic: string;
   publishedAt: string;
   url: string;
+  base_score?: number;
+  feedback_score?: number;
+  final_score?: number;
 }
