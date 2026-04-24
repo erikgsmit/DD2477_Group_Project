@@ -1,10 +1,36 @@
-import type { Article, Feedback } from "./types";
-
+import type { Article, FeedbackAction, FeedbackTotalsMap } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export interface SearchResponse {
   articles: Article[];
+}
+
+export interface FeedbackResponse {
+  articles: Article[];
+  totals: FeedbackTotalsMap;
+}
+
+function normalizeTotals(raw: unknown): FeedbackTotalsMap {
+  if (!raw || typeof raw !== "object") {
+    return {};
+  }
+  const out: FeedbackTotalsMap = {};
+  for (const [articleId, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!value || typeof value !== "object") {
+      continue;
+    }
+    const row = value as Record<string, unknown>;
+    const currentRaw = row.current;
+    const current =
+      currentRaw === "like" || currentRaw === "dislike" ? currentRaw : null;
+    out[articleId] = {
+      like_count: Number(row.like_count ?? 0),
+      dislike_count: Number(row.dislike_count ?? 0),
+      current,
+    };
+  }
+  return out;
 }
 
 /***
@@ -33,14 +59,28 @@ export async function fetchRecommendations(query: string): Promise<SearchRespons
 }
 
 /***
- * Submit user feedback and receive the reranked recommendation list.
+ * Fetch persisted like/dislike counts and current vote per article from Elasticsearch.
+ */
+export async function fetchFeedbackTotals(): Promise<FeedbackTotalsMap> {
+  const response = await fetch(`${API_BASE_URL}/api/feedback/totals`);
+
+  if (!response.ok) {
+    throw new Error(`Feedback totals request failed with status ${response.status}`);
+  }
+
+  const payload = (await response.json()) as { totals?: unknown };
+  return normalizeTotals(payload.totals);
+}
+
+/***
+ * Submit user feedback and receive the reranked recommendation list plus updated totals.
  */
 export async function submitFeedback(
   article: Article,
-  feedback: Exclude<Feedback, null>,
+  action: FeedbackAction,
   query: string,
   size: number
-): Promise<SearchResponse> {
+): Promise<FeedbackResponse> {
   const response = await fetch(`${API_BASE_URL}/api/feedback`, {
     method: "POST",
     headers: {
@@ -49,7 +89,7 @@ export async function submitFeedback(
     body: JSON.stringify({
       article_id: article.id,
       article,
-      feedback,
+      feedback: action,
       query,
       size,
     }),
@@ -59,8 +99,9 @@ export async function submitFeedback(
     throw new Error(`Feedback request failed with status ${response.status}`);
   }
 
-  const payload = (await response.json()) as SearchResponse;
+  const payload = (await response.json()) as { articles?: unknown; totals?: unknown };
   return {
-    articles: Array.isArray(payload.articles) ? payload.articles : [],
+    articles: Array.isArray(payload.articles) ? (payload.articles as Article[]) : [],
+    totals: normalizeTotals(payload.totals),
   };
 }

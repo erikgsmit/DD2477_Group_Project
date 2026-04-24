@@ -1,16 +1,28 @@
-import { FormEvent, useEffect, useState } from "react";
-import { fetchRecommendations, submitFeedback } from "./api";
-import type { Article, Feedback } from "./types";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { fetchFeedbackTotals, fetchRecommendations, submitFeedback } from "./api";
+import type { Article, Feedback, FeedbackAction, FeedbackTotalsMap } from "./types";
 
 const initialQuery = "";
 
 function App() {
-  // Initialize state variables for query, articles, feedback, and loading status
   const [query, setQuery] = useState(initialQuery);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [feedbackById, setFeedbackById] = useState<Record<string, Feedback>>({});
+  const [totalsById, setTotalsById] = useState<FeedbackTotalsMap>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const refreshTotals = useCallback(async () => {
+    try {
+      const totals = await fetchFeedbackTotals();
+      setTotalsById(totals);
+    } catch {
+      setTotalsById({});
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshTotals();
+  }, [refreshTotals]);
 
   useEffect(() => {
     void loadArticles(initialQuery);
@@ -39,26 +51,32 @@ function App() {
     await loadArticles(query);
   }
 
-  /* Apply relevance feedback (like/dislike) to an article and submit it to the backend */
+  /* Apply relevance feedback (like/dislike/clear) and persist vote totals in Elasticsearch */
   async function handleFeedback(article: Article, feedback: Exclude<Feedback, null>) {
     const articleId = article.id;
-    setFeedbackById((current) => ({ ...current, [articleId]: feedback }));
+    const currentFeedback = (totalsById[articleId]?.current ?? null) as Feedback;
+    const nextFeedback: Feedback = currentFeedback === feedback ? null : feedback;
+
+    const action: FeedbackAction = nextFeedback === null ? "clear" : nextFeedback;
 
     try {
-      const response = await submitFeedback(article, feedback, query, articles.length || 10);
+      const response = await submitFeedback(article, action, query, articles.length || 10);
       setArticles(response.articles);
+      setTotalsById(response.totals);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "Unable to submit feedback right now."
       );
+      void refreshTotals();
     }
   }
 
-  /* Calculate the total number of likes and dislikes based on the feedback state */
-  const likedCount = Object.values(feedbackById).filter((value) => value === "like").length;
-  const dislikedCount = Object.values(feedbackById).filter((value) => value === "dislike").length;
+  const likedCount = Object.values(totalsById).reduce((sum, row) => sum + row.like_count, 0);
+  const dislikedCount = Object.values(totalsById).reduce(
+    (sum, row) => sum + row.dislike_count,
+    0
+  );
 
-  /* Render the main application UI, including the search form, statistics, and article recommendations */
   return (
     <main className="page-shell">
       <section className="hero">
@@ -113,7 +131,10 @@ function App() {
           </div>
         ) : (
           articles.map((article) => {
-            const feedback = feedbackById[article.id] ?? null;
+            const row = totalsById[article.id];
+            const feedback = (row?.current ?? null) as Feedback;
+            const likeCount = row?.like_count ?? 0;
+            const dislikeCount = row?.dislike_count ?? 0;
 
             return (
               <article className="article-card" key={article.id}>
@@ -134,14 +155,14 @@ function App() {
                       className={feedback === "like" ? "active positive" : ""}
                       onClick={() => void handleFeedback(article, "like")}
                     >
-                      Like
+                      Like ({likeCount})
                     </button>
                     <button
                       type="button"
                       className={feedback === "dislike" ? "active negative" : ""}
                       onClick={() => void handleFeedback(article, "dislike")}
                     >
-                      Dislike
+                      Dislike ({dislikeCount})
                     </button>
                   </div>
                 </div>

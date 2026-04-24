@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from feedback_store import FeedbackStore
+from feedback_store import FeedbackStore, VoteAction
 from search.es_search import search_articles
 from search.reranker import expand_query_with_rocchio, rerank_with_rocchio
 
@@ -18,7 +18,7 @@ feedback_store = FeedbackStore()
 class FeedbackRequest(BaseModel):
     article_id: str = Field(min_length=1)
     query: str = ""
-    feedback: Literal["like", "dislike"]
+    feedback: Literal["like", "dislike", "clear"]
     article: dict | None = None
     size: int = Field(default=10, ge=1, le=50)
 
@@ -89,26 +89,35 @@ def get_search_results(
     return {"articles": articles}
 
 
+@app.get("/api/feedback/totals")
+def get_feedback_totals() -> dict[str, dict[str, dict[str, Any]]]:
+    """Per-article like/dislike counts and current vote from Elasticsearch."""
+    return {"totals": feedback_store.list_feedback_totals()}
+
+
 @app.post("/api/feedback")
 def post_feedback(
     payload: FeedbackRequest,
-) -> dict[str, list[dict] | dict[str, str | int] | str | list[str]]:
+) -> dict[str, Any]:
     """
-    Endpoint to receive user feedback on articles. 
-    Stores the feedback in Elasticsearch and returns an updated search result based on the feedback.
+    Endpoint to receive user feedback on articles.
+    Updates vote totals in Elasticsearch, records Rocchio events for like/dislike
+    (not for clear), and returns updated search results and all vote totals.
     """
-    
-    feedback_value = 1 if payload.feedback == "like" else -1
-    
-    # Add feedback event and optional article snapshot to the feedback index.
-    entry = feedback_store.add_feedback(
-        article_id=payload.article_id,
-        query=payload.query,
-        feedback=feedback_value,
-        article=payload.article,
-    )
 
-    # Perform a search with relevance feedback to get updated results based on the new feedback.
+    vote: VoteAction = payload.feedback
+    feedback_store.apply_totals_vote(payload.article_id, vote)
+
+    entry: dict[str, Any] | None = None
+    if payload.feedback in ("like", "dislike"):
+        feedback_value = 1 if payload.feedback == "like" else -1
+        entry = feedback_store.add_feedback(
+            article_id=payload.article_id,
+            query=payload.query,
+            feedback=feedback_value,
+            article=payload.article,
+        )
+
     articles, expanded_query, expansion_terms = _search_with_relevance_feedback(
         query=payload.query,
         size=payload.size,
@@ -119,4 +128,5 @@ def post_feedback(
         "expanded_query": expanded_query,
         "expansion_terms": expansion_terms,
         "articles": articles,
+        "totals": feedback_store.list_feedback_totals(),
     }

@@ -10,7 +10,11 @@
       "query": { "type": "text" },
       "feedback": { "type": "integer" },
       "timestamp": { "type": "date" },
-      "article": { "type": "object", "dynamic": true }
+      "article": { "type": "object", "dynamic": true },
+      "like_count": { "type": "integer" },
+      "dislike_count": { "type": "integer" },
+      "current": { "type": "keyword" },
+      "updated_at": { "type": "date" }
     }
   }
 }
