@@ -82,7 +82,7 @@ cd crawler
 python fetch_links.py
 python fetch_articles.py
 ```
-This will retrieva all articles from our RSS links.
+This will retriev all articles from our RSS links.
 ### Step 3: Create the indices and load the article data
 After fetching all the articles, in the same terminal as before, run:
 ```bash
