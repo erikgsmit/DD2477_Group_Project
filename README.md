@@ -65,7 +65,7 @@ In order to start/setup a local Elasticsearch instance, please follow this guide
 Run the project in this order.
 
 ### Step 1: Start Elasticsearch
-
+In one terminal, run the following command after setting up your local Elasticsearch instance:
 ```bash
 cd backend/elastic-start-local
 ./start.sh
@@ -74,7 +74,7 @@ cd backend/elastic-start-local
 Wait until Elasticsearch is fully up before continuing.
 
 ### Step 2: Crawl the news articles
-
+In another terminal, run:
 ```bash
 cd backend
 source .venv/bin/activate
@@ -82,21 +82,18 @@ cd crawler
 python fetch_links.py
 python fetch_articles.py
 ```
-
+This will retrieva all articles from our RSS links.
 ### Step 3: Create the indices and load the article data
-
+After fetching all the articles, in the same terminal as before, run:
 ```bash
-cd backend
-source .venv/bin/activate
 python create_index.py
 python insert_data.py
 ```
 
 ### Step 4: Run the backend API
-
+Now run the following commands (make sure your virtual environment is activated):
 ```bash
 cd backend
-source .venv/bin/activate
 uvicorn app:app --reload
 ```
 
