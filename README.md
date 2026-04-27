@@ -73,7 +73,17 @@ cd backend/elastic-start-local
 
 Wait until Elasticsearch is fully up before continuing.
 
-### Step 2: Create the indices and load the article data
+### Step 2: Crawl the news articles
+
+```bash
+cd backend
+source .venv/bin/activate
+cd crawler
+python fetch_links.py
+python fetch_articles.py
+```
+
+### Step 3: Create the indices and load the article data
 
 ```bash
 cd backend
@@ -82,7 +92,7 @@ python create_index.py
 python insert_data.py
 ```
 
-### Step 3: Run the backend API
+### Step 4: Run the backend API
 
 ```bash
 cd backend
@@ -104,7 +114,7 @@ Health check:
 GET /api/health
 ```
 
-### Step 4: Run the frontend
+### Step 5: Run the frontend
 
 In a new terminal:
 
