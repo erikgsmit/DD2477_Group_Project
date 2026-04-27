@@ -1,6 +1,10 @@
 # DD2477 Group Project
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/) [![React](https://img.shields.io/badge/React-18-20232A?logo=react&logoColor=61DAFB)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/) [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-search-005571?logo=elasticsearch&logoColor=white)](https://www.elastic.co/elasticsearch) [![Vite](https://img.shields.io/badge/Vite-frontend-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/) [![Docker](https://img.shields.io/badge/Docker-containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
+<p align="center">
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/52d51b60-6af3-4b48-b0b8-ebca8adbd92a" />
+</p>
+
 This repository contains a news retrieval and recommendation system with:
 - a Python backend API for indexing/searching articles and relevance feedback
 - crawler scripts for collecting recent news content
@@ -116,3 +120,10 @@ http://127.0.0.1:5173
 ```
 
 The frontend sends API requests to the backend at `http://127.0.0.1:8000`.
+
+## Contributors
+- [Erik Smit](https://github.com/erikgsmit)
+- [Juozas Skarbalius](https://github.com/terahidro2003)
+- [Daniel Hreggvidsson](https://github.com/DanielHreggvidsson)
+- [Joachim Olsson](https://github.com/tipptapp)
+
