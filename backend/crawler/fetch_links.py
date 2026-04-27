@@ -1,31 +1,9 @@
-import json 
+import json
+import re 
 import requests
 import xml.etree.ElementTree as ET #read and interprete XML (RSS in XML)
 from pathlib import Path
 from urllib.parse import urlparse
-
-# get more from here if needed https://www.nytimes.com/rss
-RSS_FEEDS = [
-    "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/Africa.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/Americas.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/AsiaPacific.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/Europe.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/MiddleEast.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/US.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/Education.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/EnergyEnvironment.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/SmallBusiness.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/DealBook.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/MediaandAdvertising.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/YourMoney.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
-    "https://rss.nytimes.com/services/xml/rss/nyt/PersonalTech.xml",
-    "https://feeds.bbci.co.uk/news/rss.xml",
-    
-]
 
 # For implementing web crawler without RSS
 START_URLS = [
@@ -38,9 +16,36 @@ DELAY_S = 1.0
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_PATH = BASE_DIR / "data" / "raw" / "links.json"
+FEEDS_FILE = BASE_DIR / "rss_feeds.txt"
 
 def ensure_output_directory(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    
+def load_rss_feeds(path: Path) -> list[str]:
+    if not path.exists():
+        print(f"Filen finns inte: {path}")
+        return []
+
+    feeds = []
+    seen = set()
+    
+    url_pattern = re.compile(r'https?://[^\s,"\']+')
+
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            match = url_pattern.search(line)
+            if not match:
+                continue
+
+            url = match.group(0).strip()
+
+            if url not in seen:
+                seen.add(url)
+                feeds.append(url)
+
+    return feeds
+
+RSS_FEEDS = load_rss_feeds(FEEDS_FILE)
     
 def is_valid_url(url: str) -> bool:
     try:
