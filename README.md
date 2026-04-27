@@ -1,4 +1,5 @@
 # DD2477 Group Project
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/) [![React](https://img.shields.io/badge/React-18-20232A?logo=react&logoColor=61DAFB)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/) [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-search-005571?logo=elasticsearch&logoColor=white)](https://www.elastic.co/elasticsearch) [![Vite](https://img.shields.io/badge/Vite-frontend-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/) [![Docker](https://img.shields.io/badge/Docker-containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
 This repository contains a news retrieval and recommendation system with:
 - a Python backend API for indexing/searching articles and relevance feedback
@@ -24,6 +25,7 @@ Install the following before running:
 ## Setup
 
 ### 1) Backend
+To start, we recommend setting up a virtual environment. In order to do this, you may run the following commands:
 
 ```bash
 cd backend
@@ -33,6 +35,7 @@ pip install -r requirements.txt
 ```
 
 ### 2) Frontend
+To install the frontend dependencies, run the following commands:
 
 ```bash
 cd web
@@ -41,17 +44,32 @@ npm install
 
 ### 3) Elasticsearch
 
-Start a local Elasticsearch instance with Docker, then configure:
+This project uses a local Elasticsearch instance.
+
+An example local configuration is already included in:
 
 ```text
 backend/config.local.json
 ```
 
-Reference: [Elastic start-local guide](https://github.com/elastic/start-local?tab=readme-ov-file#-try-elasticsearch-and-kibana-locally)
+However, you will need to change this file slightly.
+
+In order to start/setup a local Elasticsearch instance, please follow this guide [Elasticsearch start-local](https://github.com/elastic/start-local?tab=readme-ov-file#-try-elasticsearch-and-kibana-locally).
 
 ## How to Execute the Project
 
-### Step A: Create index and load data
+Run the project in this order.
+
+### Step 1: Start Elasticsearch
+
+```bash
+cd backend/elastic-start-local
+./start.sh
+```
+
+Wait until Elasticsearch is fully up before continuing.
+
+### Step 2: Create the indices and load the article data
 
 ```bash
 cd backend
@@ -60,7 +78,7 @@ python create_index.py
 python insert_data.py
 ```
 
-### Step B: Run backend API
+### Step 3: Run the backend API
 
 ```bash
 cd backend
@@ -76,7 +94,13 @@ Example endpoint:
 GET /api/search?query=technology&size=10
 ```
 
-### Step C: Run frontend
+Health check:
+
+```text
+GET /api/health
+```
+
+### Step 4: Run the frontend
 
 In a new terminal:
 
@@ -84,3 +108,11 @@ In a new terminal:
 cd web
 npm run dev
 ```
+
+Open the local Vite URL shown in the terminal, which is typically:
+
+```text
+http://127.0.0.1:5173
+```
+
+The frontend sends API requests to the backend at `http://127.0.0.1:8000`.
